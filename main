@@ -1,0 +1,60 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Mar 23 09:04:49 2017
+
+@author: HP
+"""
+import sys
+import pprint
+from imp import reload
+reload(sys)
+#sys.setdefaultencoding('utf-8')
+import requests
+urldict={}
+import os
+try:
+    os.mkdir('./output')
+except:
+    pass
+
+#从巨潮资讯解析出pdf的真实下载地址
+f=open('stkcd.csv','r')
+fout=open('./output/urls.csv','w')
+i = 1
+for line in f:
+    stkcd = str(line[:6]).strip()
+    # 这一行把“招股说明书”换成　“年报”　“半年报”　之类的，即可批量下载其他的公告
+#    print(stkcd)
+    response=requests.get('http://www.cninfo.com.cn/cninfo-new/fulltextSearch/full?searchkey='+stkcd+'+招股说明书&&sdate=&edate=&isfulltext=false&sortName=nothing&sortType=desc&pageNum=1')
+    dict=response.json()
+    for i in dict['announcements']:          #dict只是存放response.json的容器，类型用    print(type(dict))检查了为dict类型
+#        print(type(i))
+#        if '摘要' not in i['announcementTitle']:
+            print (i['announcementTitle'])   # https://pic2.zhimg.com/v2-22fb938148529ccedd8be05db9f60ba1_r.png 这个是一个解析网址后的例子
+            #   <em>东方时尚</em>：首次公开发行股票<em>招股说明书</em>  是print出来的i['announcementTitle']
+            # http://json.cn/   把response解析了一下，发现这个格式是出两个基本相同的排列组成，其中后一个为招股说明书i['announcementTitle']的摘要，
+            url='http://www.cninfo.com.cn/'+i['adjunctUrl']   # 这个‘adjunctUrl’存放的为pdf所在的网址
+#            print(url)
+            secname=i['secName']       # 这个为股票代码
+            date=i['adjunctUrl'][10:20]    #这个把招股书发布时间截出来
+            urldict.update({stkcd+'-'+secname+'-'+date:url})       # 向urldict中导入当前股票的名称-代码-日期:pdf的下载网址
+#            print(type(urldict))                                  # urldict是之前定义的   
+            csvtowrite=stkcd+','+secname+','+date+','+url+'\n'     #  形成一个  股票名称 代码  日期  网址  的string
+            fout.write(csvtowrite)          #将这个写进预先定义的输出流一个csv中
+#pprint.pprint(urldict)
+fout.close()
+
+
+#根据解析出的pdf地址下载到output，并重命名成有规律的文件
+import urllib.request
+import os
+for name in urldict:
+    url=urldict[name]
+    response = urllib.request.urlopen(url)
+    temp=os.getcwd()
+    print(temp)
+    print(name.strip())
+#    file = open('temp+'+name+".pdf", 'wb')
+#    file.write(response.read())
+#   file.close()
+#    print (name)
