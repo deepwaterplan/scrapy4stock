@@ -54,7 +54,7 @@ for name in urldict:
     temp=os.getcwd()
     print(temp)
     print(name.strip())
-#    file = open('temp+'+name+".pdf", 'wb')
+#    file = open('temp+'+name+".pdf", 'wb')  # https://zhidao.baidu.com/question/752784142246058324.html
 #    file.write(response.read())
 #   file.close()
 #    print (name)
